@@ -5,6 +5,7 @@ import argparse
 
 import scryfall
 
+
 # Setup logging
 logging.basicConfig(
     format="%(asctime)s [%(levelname)s] [%(processName)s:%(process)d] %(module)s:%(funcName)s:%(lineno)d %(message)s",
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-def get_prices():
+def main():
 
     # Fetch cards in bulk
     cards = []
@@ -51,8 +52,6 @@ def get_prices():
             'commander'
         ])
 
-        # print(cards[0].keys())
-
         # Write card prices to csv file
         for card in cards:
             writer.writerow([
@@ -73,7 +72,10 @@ def get_prices():
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Magic the Gathering price tracker')
-    #parser.add_argument('-legality', type=str, default='standard', help='legality')
     args, unknown = parser.parse_known_args()
 
-    get_prices()
+    main()
+
+
+
+#
