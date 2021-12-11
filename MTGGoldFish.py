@@ -1,6 +1,7 @@
 
 import time
 
+from logger import logger
 from Deck import Deck
 from HttpClient import HttpClient
 
