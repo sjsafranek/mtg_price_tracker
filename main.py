@@ -1,7 +1,6 @@
 
 import json
 from datetime import datetime
-from itertools import chain
 
 from logger import logger
 from ScryFallClient import ScryFallClient
@@ -9,11 +8,8 @@ from MTGTop8CLient import MTGTop8CLient
 from MTGGoldFish import MTGGoldFish
 
 
-
 FORMAT = 'Modern'
 START = datetime.now().isoformat()
-
-
 
 
 # Create http clients

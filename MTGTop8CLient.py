@@ -1,4 +1,6 @@
 
+from itertools import chain
+
 from Deck import Deck
 from HttpClient import HttpClient
 
@@ -42,9 +44,10 @@ class MTGTop8CLient(HttpClient):
         return Deck(url)
 
     def fetchDecks(self, legality):
+        mtgFormat = self.FORMATS[legality.lower()]
         archetypeLinks = self.execute(self.scrapeLinksFromUrl, [
                         'https://mtgtop8.com/{0}'.format(link)
-                            for link in self.scrapeLinksFromUrl('https://mtgtop8.com/format?f={0}&meta=51&a='.format(self.FORMATS[legality.lower]))
+                            for link in self.scrapeLinksFromUrl('https://mtgtop8.com/format?f={0}&meta=51&a='.format(mtgFormat))
                                 if 'archetype' in link
                     ])
         deck_links = chain.from_iterable([
