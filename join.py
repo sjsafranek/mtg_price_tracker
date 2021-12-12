@@ -7,7 +7,8 @@ df2 = pandas.read_csv('data/modern.csv')
 df = pandas.merge(df1, df2, how='outer', on='name')
 
 def shouldBuy(row):
-    if 'PLAYSET' != row['state']:
+    #if 'PLAYSET' != row['state']:
+    if 4 > row['owned']
         if row['price'] and 5 > float(row['price']):
             if float(row['deck_percentage']) > 3:
                 return True
