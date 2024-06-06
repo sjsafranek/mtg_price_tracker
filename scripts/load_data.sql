@@ -4,7 +4,7 @@
 
 
 -- Cards
-CREATE TEMPORARY TABLE temp (scryfall_card_id VARCHAR(36), name TEXT);
+CREATE TEMPORARY TABLE temp (scryfall_card_id UUID, name TEXT);
 
 \copy temp (scryfall_card_id, name)  FROM 'data/cards.csv' DELIMITER ',' CSV HEADER;
 
@@ -24,7 +24,7 @@ DROP TABLE temp;
 
 
 -- History
-CREATE TEMPORARY TABLE temp (event_timestamp TIMESTAMPTZ, scryfall_card_id VARCHAR(36), usd REAL, usd_foil REAL, usd_etched REAL);
+CREATE TEMPORARY TABLE temp (event_timestamp TIMESTAMPTZ, scryfall_card_id UUID, usd REAL, usd_foil REAL, usd_etched REAL);
 
 \copy temp (event_timestamp, scryfall_card_id, usd, usd_foil, usd_etched)  FROM 'data/prices.csv' DELIMITER ',' CSV HEADER;
 
