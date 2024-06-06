@@ -6,11 +6,9 @@ FILE="data/prices.csv"
 MAX_AGE="14400"
 
 
-# Check file age
-if [ "$(( $(date +"%s") - $(stat -c "%Y" "$FILE") ))" -gt "$MAX_AGE" ]; then
-
-	HOURS=$((${MAX_AGE}/3600))
-	echo "'$FILE' is older then $HOURS hours"
+# Build dataset if file does not exist.
+# If file exists, check file age.
+if [ ! -f "$FILE" ] || [ "$(( $(date +"%s") - $(stat -c "%Y" "$FILE") ))" -gt "$MAX_AGE" ]; then
 
 	echo "Building new dataset"
    	python build.py

@@ -1,7 +1,7 @@
 
 -- Create cards table
 CREATE TABLE cards (
-    scryfall_card_id    VARCHAR(36) PRIMARY KEY,
+    scryfall_card_id    UUID PRIMARY KEY,
     name                TEXT,
     created_at          TIMESTAMP DEFAULT (now()),
     updated_at          TIMESTAMP DEFAULT (now())
@@ -10,7 +10,7 @@ CREATE TABLE cards (
 -- Create history table to track prices
 CREATE TABLE history__prices (
     event_timestamp     TIMESTAMPTZ DEFAULT (now()),
-    scryfall_card_id    VARCHAR(36),
+    scryfall_card_id    UUID,
     usd                 REAL,
     usd_foil            REAL,
     usd_etched          REAL,
