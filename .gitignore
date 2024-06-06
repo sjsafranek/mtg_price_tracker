@@ -1,5 +1,7 @@
+
 # App stuff
 data/*.csv
+docker_volumes/
 
 
 # Byte-compiled / optimized / DLL files

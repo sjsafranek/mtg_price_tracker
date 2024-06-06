@@ -1,80 +1,78 @@
-import os
-import csv
-import logging
-import argparse
 
-import scryfall
+import json
+from datetime import datetime
 
-
-# Setup logging
-logging.basicConfig(
-    format="%(asctime)s [%(levelname)s] [%(processName)s:%(process)d] %(module)s:%(funcName)s:%(lineno)d %(message)s",
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+from logger import logger
+from ScryFallClient import ScryFallClient
+from MTGTop8CLient import MTGTop8CLient
+from MTGGoldFish import MTGGoldFish
 
 
-def main():
-
-    # Fetch cards in bulk
-    cards = []
-    filename = ''
-    updated_at = ''
-
-    # Fetch cards in bulk
-    for item in scryfall.fetchBulkDataTypes():
-        if 'default_cards' == item['type']:
-            # Get timestamp
-            updated_at = item['updated_at']
-            # Check if file exists
-            filename = 'data/{0}.csv'.format(updated_at)
-            if os.path.exists(filename):
-                exit(0)
-            # Fetch cards
-            cards = scryfall.fetchBulkDataByType('default_cards')
-
-    # Open file handler
-    with open(filename, 'w') as fh:
-        # create csv writer and write fieldnames
-        writer = csv.writer(fh)
-        writer.writerow([
-            'updated_at',
-            'name',
-            'set',
-            'set_name',
-            'price_base',
-            'price_foil',
-            'standard',
-            'pioneer',
-            'modern',
-            'legacy',
-            'commander'
-        ])
-
-        # Write card prices to csv file
-        for card in cards:
-            writer.writerow([
-                updated_at,
-                card['name'],
-                card['set'],
-                card['set_name'],
-                card['prices']['usd'],
-                card['prices']['usd_foil'],
-                'legal' == card['legalities']['standard'],
-                'legal' == card['legalities']['pioneer'],
-                'legal' == card['legalities']['modern'],
-                'legal' == card['legalities']['legacy'],
-                'legal' == card['legalities']['commander']
-            ])
+FORMAT = 'Modern'
+START = datetime.now().isoformat()
 
 
-if __name__ == "__main__":
+# Create http clients
+scry = ScryFallClient()
+top8 = MTGTop8CLient()
+fish = MTGGoldFish()
 
-    parser = argparse.ArgumentParser(description='Magic the Gathering price tracker')
-    args, unknown = parser.parse_known_args()
 
-    main()
+# Fetch decks for modern
+number_of_decks = 0
+playedCards = {}
+
+for deck in fish.fetchDecks(FORMAT):
+    data = deck.ToDict()
+    number_of_decks += 1
+    for section in ['mainboard', 'sideboard']:
+        for card in data[section]:
+            if card not in playedCards:
+                playedCards[card] = {'decks': 0,'total_count': 0, 'price': -1, 'type_line': None, 'colors': []}
+            playedCards[card]['total_count'] += data[section][card]
+            playedCards[card]['decks'] += 1
+
+for deck in top8.fetchDecks(FORMAT):
+    data = deck.ToDict()
+    number_of_decks += 1
+    for section in ['mainboard', 'sideboard']:
+        for card in data[section]:
+            if card not in playedCards:
+                playedCards[card] = {'decks': 0,'total_count': 0, 'price': -1, 'type_line': None, 'colors': []}
+            playedCards[card]['total_count'] += data[section][card]
+            playedCards[card]['decks'] += 1
+
+
+# Fetch Modern playable cards
+cards = scry.fetchCardsForFormat('Modern')
+
+# Lookup card price
+for card in cards:
+    name = card['name']
+    if name in playedCards:
+        if card['prices']['usd']:
+            playedCards[name]['price'] = float(card['prices']['usd'])
+        playedCards[name]['type_line'] = card['type_line']
+        playedCards[name]['colors'] = card['colors']
+
+
+
+# Write to file
+with open('data/modern.csv', 'w') as fh:
+    fh.write('decks,deck_percentage,total_count,name,price,type_line,colors\n')
+    for name in playedCards:
+        color = ''.join(playedCards[name]['colors'])
+        fh.write('{0},{1},{2},"{3}",{4},{5},{6}\n'.format(
+            playedCards[name]['decks'],
+            round(playedCards[name]['decks'] / number_of_decks * 100, 2),
+            playedCards[name]['total_count'],
+            name,
+            playedCards[name]['price'],
+            playedCards[name]['type_line'],
+            color
+        ))
+
+
 
 
 

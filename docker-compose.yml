@@ -1,0 +1,23 @@
+version: '3.0'
+
+services:
+
+   mtgdb:
+     container_name: "mtgdb"
+     build: .
+     volumes:
+       - ./docker_volumes/pgdata/mtgdb:/var/lib/postgresql/data
+       - ./data:/data
+       - ./scripts:/scripts
+     environment:
+       POSTGRES_USER: mtguser
+       POSTGRES_PASSWORD: dev
+       POSTGRES_DB: mtgdb
+     restart: always
+     networks:
+       - webnet
+     ports:
+       - "5431:5432"
+
+networks:
+   webnet:
