@@ -17,3 +17,6 @@ set client_min_messages to 'warning';
 -- create tables
 \i create_config_table.sql
 \i create_tables.sql
+
+-- create views
+\i create_views.sql

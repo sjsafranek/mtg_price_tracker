@@ -9,6 +9,3 @@ echo "Initializing database"
 cd base_schema
 PGPASSWORD=dev psql -d mtgdb -U mtguser -f db_setup.sql
 cd ..
-
-echo "Loading base data"
-PGPASSWORD=dev psql -d mtgdb -U mtguser -f /scripts/load_data.sql
