@@ -2,7 +2,7 @@ import os.path
 import pandas
 import datetime
 
-import scryfall
+import lib.scryfall as scryfall
 
 
 # Initialize scryfall api client and fetch master dataset
@@ -14,7 +14,8 @@ updated_at = dataset['updated_at']
 # Check for archive file
 dt = datetime.datetime.fromisoformat(updated_at)
 now = int(dt.timestamp())
-if os.path.exists(f'data/prices_{now}.csv'):
+pricesFilename = f'data/prices_{now}.csv'
+if os.path.exists(pricesFilename):
     exit(0)
 
 # Build new card dataset
@@ -52,8 +53,9 @@ cards_df = pandas.DataFrame.from_dict(CARDS)
 
 # Copy to master files
 cards_df.to_csv('data/cards.csv', index=False)
-prices_df.to_csv('data/prices.csv', index=False)
+#prices_df.to_csv('data/prices.csv', index=False)
 
 # Copy to historical archive files
-prices_df.to_csv(f'data/prices_{now}.csv', index=False)
+prices_df.to_csv(pricesFilename, index=False)
 
+print(pricesFilename)
