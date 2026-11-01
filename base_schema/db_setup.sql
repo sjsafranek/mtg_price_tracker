@@ -15,8 +15,9 @@ set client_min_messages to 'warning';
 \i create_general_functions.sql
 
 -- create tables
-\i create_config_table.sql
--- \i create_tables.sql
+\i create_table__config.sql
+\i create_table__cards.sql
+\i create_table__cards_price_history.sql
 
 -- create views
 -- \i create_views.sql
