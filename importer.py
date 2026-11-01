@@ -31,10 +31,9 @@ HEADERS = {
     "User-Agent": "scryfall-pg-importer/1.0",
     "Accept": "application/json;q=0.9,*/*;q=0.8",
 }
+
+
 BATCH_SIZE = 1000
-
-
-# """
 
 COLUMNS = [
     "id", "oracle_id", "name", "set_code", "set_name", "collector_number",
