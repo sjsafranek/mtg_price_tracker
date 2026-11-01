@@ -34,72 +34,6 @@ HEADERS = {
 BATCH_SIZE = 1000
 
 
-# SCHEMA = """
-# CREATE TABLE IF NOT EXISTS cards (
-#     id               UUID PRIMARY KEY,
-#     oracle_id        UUID,
-#     name             TEXT NOT NULL,
-#     set_code         TEXT,
-#     set_name         TEXT,
-#     collector_number TEXT,
-#     lang             TEXT,
-#     released_at      DATE,
-#     layout           TEXT,
-#     mana_cost        TEXT,
-#     cmc              NUMERIC,
-#     type_line        TEXT,
-#     oracle_text      TEXT,
-#     power            TEXT,
-#     toughness        TEXT,
-#     colors           TEXT[],
-#     color_identity   TEXT[],
-#     keywords         TEXT[],
-#     rarity           TEXT,
-#     artist           TEXT,
-#     prices           JSONB,
-#     legalities       JSONB,
-#     image_uris       JSONB,
-#     data             JSONB NOT NULL
-# );
-# CREATE INDEX IF NOT EXISTS cards_oracle_id_idx ON cards (oracle_id);
-# CREATE INDEX IF NOT EXISTS cards_name_idx      ON cards (lower(name));
-# CREATE INDEX IF NOT EXISTS cards_set_idx       ON cards (set_code, collector_number);
-# CREATE INDEX IF NOT EXISTS cards_data_gin_idx  ON cards USING GIN (data jsonb_path_ops);
-
-
-# CREATE TABLE IF NOT EXISTS card_price_history (
-#     card_id      	UUID,
-#     prices          JSONB,
-#     action_type     VARCHAR(10) NOT NULL,
-#     changed_at      TIMESTAMP NOT NULL DEFAULT NOW()
-# );
-
-# -- Create trigger function
-# CREATE OR REPLACE FUNCTION log_card_price_change()
-# RETURNS TRIGGER AS $$
-# BEGIN
-#     IF (TG_OP = 'INSERT') THEN
-#         INSERT INTO card_price_history (action_type, card_id, prices)
-#         VALUES ('INSERT', NEW.id, NEW.prices);
-#         RETURN NEW;
-#     ELSIF (TG_OP = 'UPDATE') THEN
-#         IF (OLD.prices IS DISTINCT FROM NEW.prices) THEN
-#             INSERT INTO card_price_history (action_type, card_id, prices)
-#             VALUES ('UPDATE', OLD.id, OLD.prices);
-#         END IF;
-#         RETURN NEW;
-#     END IF;
-#     RETURN NULL;
-# END;
-# $$ LANGUAGE plpgsql;
-
-# -- Bind trigger to table
-# CREATE TRIGGER cards_price_tracker_trigger
-# BEFORE INSERT OR UPDATE OR DELETE ON cards
-# FOR EACH ROW
-# EXECUTE FUNCTION log_card_price_change();
-
-
 # """
 
 COLUMNS = [
@@ -132,11 +66,7 @@ def download(url: str, dest: str) -> None:
     with requests.get(url, headers=HEADERS, stream=True, timeout=60) as response:
         response.raise_for_status()
         with open(dest, "wb") as out_writer:
-            # for chunk in response.iter_content(chunk_size=1 << 20):
-            #     fh.write(chunk)
             with gzip.GzipFile(fileobj=response.raw) as gzip_reader:
-                # uncompressed_data = gzipped_file.read()       
-                # fh.write(uncompressed_data)
                 shutil.copyfileobj(gzip_reader, out_writer)
 
 
@@ -223,10 +153,6 @@ def main() -> None:
 
     conn = psycopg2.connect(args.dsn)
     try:
-        # with conn.cursor() as cur:
-        #     cur.execute(SCHEMA)
-        # conn.commit()
-
         if args.file:
             import_cards(conn, args.file)
         else:
@@ -241,3 +167,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
