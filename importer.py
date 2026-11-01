@@ -3,18 +3,13 @@
 Import Scryfall bulk card data into PostgreSQL.
 
 Usage:
-    pip install requests psycopg2-binary ijson
+    pip install requests psycopg2-binary
     export DATABASE_URL="postgresql://mtguser:dev@localhost:5432/mtgdb"
     python scryfall_import.py                      # default_cards (every printing, English)
     python scryfall_import.py --type oracle_cards  # one entry per Oracle card
     python scryfall_import.py --file cards.json    # use a previously downloaded file
 
 Bulk types: oracle_cards, unique_artwork, default_cards, all_cards, rulings
-
-sudo -u postgres psql -c "CREATE USER mtguser WITH PASSWORD 'dev'"
-sudo -u postgres psql -c "CREATE DATABASE mtgdb"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE mtgdb to mtguser"
-sudo -u postgres psql -c "ALTER USER mtguser WITH SUPERUSER"
 
 """
 import gzip
