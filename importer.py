@@ -183,8 +183,8 @@ def import_cards(conn, path: str) -> int:
                 print(f"\r{total:,} cards imported", end="", flush=True)
         
         # 3. Perform the bulk upsert logic entirely in the database engine
-        # print(UPSERT_QUERY)
-        # cur.execute(UPSERT_QUERY)
+        print(UPSERT_QUERY)
+        cur.execute(UPSERT_QUERY)
 
         # 4. Commit transaction
         conn.commit()
