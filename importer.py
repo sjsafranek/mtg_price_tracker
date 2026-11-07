@@ -60,8 +60,8 @@ ON CONFLICT (id) DO UPDATE SET
     {", ".join(f"{c} = EXCLUDED.{c}" for c in COLUMNS if c != "id")}
 """
 
-UPSERT_QUERY = """
-    INSERT INTO cards({", ".join(COLUMNS)}) 
+UPSERT_QUERY = f"""
+    INSERT INTO cards ({", ".join(COLUMNS)}) 
     SELECT {", ".join(COLUMNS)} FROM temp_cards
     ON CONFLICT (id) 
     DO UPDATE SET
