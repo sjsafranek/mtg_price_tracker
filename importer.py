@@ -62,11 +62,14 @@ ON CONFLICT (id) DO UPDATE SET
 
 UPSERT_QUERY = f"""
 WITH current AS (
-    SELECT md5(t::text) FROM cards t
+    SELECT md5(t::text) h FROM cards t
 )
 INSERT INTO cards ({", ".join(COLUMNS)}) 
 SELECT {", ".join(COLUMNS)} FROM temp_cards
-    WHERE md5(temp_cards::text) NOT EXISTS (SELECT * FROM current)
+    WHERE NOT EXISTS (
+        SELECT 1 FROM current 
+        WHERE h=md5(temp_cards::text)
+    )
 ON CONFLICT (id) 
 DO UPDATE SET
     {", ".join(f"{c} = EXCLUDED.{c}" for c in COLUMNS if c != "id")}
