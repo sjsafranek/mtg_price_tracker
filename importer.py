@@ -3,7 +3,9 @@
 Import Scryfall bulk card data into PostgreSQL.
 
 Usage:
-    pip install requests psycopg2-binary
+    #pip install requests psycopg2-binary
+    pip3 install requests
+    pip3 install "psycopg[binary]"
     export DATABASE_URL="postgresql://mtguser:dev@localhost:5432/mtgdb"
     python scryfall_import.py                      # default_cards (every printing, English)
     python scryfall_import.py --type oracle_cards  # one entry per Oracle card
@@ -128,13 +130,15 @@ def import_cards(conn, path: str) -> int:
             card = json.loads(line)
             batch.append(card_to_row(card))
             if len(batch) >= BATCH_SIZE:
-                execute_values(cur, UPSERT, batch)
+                # execute_values(cur, UPSERT, batch)
+                cur.executemany(UPSERT, batch)
                 conn.commit()
                 total += len(batch)
                 batch.clear()
                 print(f"\r{total:,} cards imported", end="", flush=True)
         if batch:
-            execute_values(cur, UPSERT, batch)
+            # execute_values(cur, UPSERT, batch)
+            cur.executemany(UPSERT, batch)
             conn.commit()
             total += len(batch)
     print(f"\r{total:,} cards imported")
