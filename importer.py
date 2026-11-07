@@ -125,7 +125,8 @@ def import_cards(conn, path: str, filename: str) -> int:
         cur.execute("SELECT filename FROM uploads WHERE filename = %s;", (filename,))
         rows = cur.fetchall()
         if 0 != len(rows):
-            return
+            print("Duplicate import file")
+            return total
 
         # 1. Create an empty unlogged staging table matching your target structure
         cur.execute("""DROP TABLE IF EXISTS temp_cards;""");
@@ -180,7 +181,7 @@ def main() -> None:
                 import_cards(conn, path, url.split('/')[-1])
     finally:
         conn.close()
-        print('done')
+        os.Exit(0)
 
 
 if __name__ == "__main__":
