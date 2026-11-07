@@ -166,11 +166,17 @@ def card_to_row(card: dict) -> tuple:
 #     return total
 
 
-def import_cards(conn, path: str) -> int:
+def import_cards(conn, path: str, filename: str) -> int:
     print("Importing...")
     total = 0
     # Create database connection
     with conn.cursor() as cur, open(path, "r") as fh:
+
+        # Check if file has already been uploaded        
+        cur.execute("SELECT filename FROM uploads WHERE filename = %s;", (filename,))
+        rows = cur.fetchall()
+        if 0 != len(rows):
+            return
 
         # 1. Create an empty unlogged staging table matching your target structure
         # cur.execute("""CREATE TEMP TABLE temp_cards (LIKE cards INCLUDING DEFAULTS) ON COMMIT DROP;""")
@@ -189,6 +195,9 @@ def import_cards(conn, path: str) -> int:
         # 3. Perform the bulk upsert logic entirely in the database engine
         print(UPSERT_QUERY)
         cur.execute(UPSERT_QUERY)
+
+        # Insert filename of upload to prevent duplicates
+        cur.execute("INSERT INTO uploads (filename) VALUES(%s);", (filename,))
 
         # 4. Commit transaction
         conn.commit()
@@ -218,8 +227,8 @@ def main() -> None:
             url = get_bulk_download_url(args.type)
             with tempfile.TemporaryDirectory() as tmp:
                 path = os.path.join(tmp, "bulk.jsonl")
-                download(url, path)
-                import_cards(conn, path)
+                filename = download(url, path)
+                import_cards(conn, path, url.split('/')[-1])
     finally:
         conn.close()
         print('done')
