@@ -52,7 +52,7 @@ class ScryFall(object):
 
     def _download(self, url: str, dest: str) -> None:
         print(f"Downloading '{url}'...")
-        with self.sessions.get(url, headers=HEADERS, stream=True, timeout=60) as response:
+        with self.session.get(url, headers=HEADERS, stream=True, timeout=60) as response:
             response.raise_for_status()
             with open(dest, "wb") as out_writer:
                 with gzip.GzipFile(fileobj=response.raw) as gzip_reader:
