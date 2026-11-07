@@ -145,7 +145,6 @@ def card_to_row(card: dict) -> tuple:
 
 def import_cards(conn, path: str, filename: str) -> int:
     print("Importing...")
-    print(path)
     total = 0
     # Create database connection
     with conn.cursor() as cur, open(path, "r") as fh:
