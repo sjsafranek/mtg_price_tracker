@@ -40,7 +40,7 @@ class ScryFall(object):
     def __init__(self):
         self.session = requests.Session()
 
-    def _get(url, stream=False, timeout=60):
+    def _get(self, url, stream=False, timeout=60):
         resp = self.session.get(url, headers=ScryFall.HEADERS, stream=stream, timeout=timeout)
         resp.raise_for_status()
         return resp
