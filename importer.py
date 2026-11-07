@@ -40,9 +40,13 @@ class ScryFall(object):
     def __init__(self):
         self.session = requests.Session()
 
-    def fetchBulkData(self):
-        resp = self.session.get(ScryFall.BULK_URL, headers=ScryFall.HEADERS, timeout=30)
+    def _get(url, stream=False, timeout=60):
+        resp = self.session.get(url, headers=ScryFall.HEADERS, stream=stream, timeout=timeout)
         resp.raise_for_status()
+        return resp
+
+    def fetchBulkData(self):
+        resp = self._get(ScryFall.BULK_URL, timeout=30)
         return resp.json()["data"]
 
     def download(self, bulk_type: str, dest: str) -> str:
@@ -52,7 +56,7 @@ class ScryFall(object):
 
     def _download(self, url: str, dest: str) -> None:
         print(f"Downloading '{url}'...")
-        with self.session.get(url, headers=HEADERS, stream=True, timeout=60) as response:
+        with self._get(url, stream=True, timeout=60) as response:
             response.raise_for_status()
             with open(dest, "wb") as out_writer:
                 with gzip.GzipFile(fileobj=response.raw) as gzip_reader:
