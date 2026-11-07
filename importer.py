@@ -71,6 +71,9 @@ class ScryFall(object):
                 return entry["jsonl_download_uri"]
         raise SystemExit(f"Unknown bulk type: {bulk_type}")
 
+    def close(self):
+        self.session.close()
+
 
 COLUMNS = [
     "id", "oracle_id", "name", "set_code", "set_name", "collector_number",
@@ -87,15 +90,6 @@ ON CONFLICT (id)
 DO UPDATE SET
 {", ".join(f"{c} = EXCLUDED.{c}" for c in COLUMNS if c != "id")}
 """
-
-
-# def download(url: str, dest: str) -> None:
-#     print(f"Downloading '{url}'...")
-#     with requests.get(url, headers=HEADERS, stream=True, timeout=60) as response:
-#         response.raise_for_status()
-#         with open(dest, "wb") as out_writer:
-#             with gzip.GzipFile(fileobj=response.raw) as gzip_reader:
-#                 shutil.copyfileobj(gzip_reader, out_writer)
 
 
 def card_to_row(card: dict) -> tuple:
@@ -201,11 +195,11 @@ def main() -> None:
         if args.file:
             import_cards(conn, args.file)
         else:
-            scryfall = ScryFall()
-            with tempfile.TemporaryDirectory() as tmp:
-                path = os.path.join(tmp, "bulk.jsonl")
-                filename = scryfall.download(args.type, path)
-                import_cards(conn, path, filename)
+            with ScryFall() as scryfall:
+                with tempfile.TemporaryDirectory() as tmp:
+                    path = os.path.join(tmp, "bulk.jsonl")
+                    filename = scryfall.download(args.type, path)
+                    import_cards(conn, path, filename)
     except Exception as err:
         print(err)
         sys.exit(1)
