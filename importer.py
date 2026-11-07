@@ -39,7 +39,7 @@ HEADERS = {
 }
 
 
-BATCH_SIZE = 5000
+BATCH_SIZE = 1000
 
 COLUMNS = [
     "id", "oracle_id", "name", "set_code", "set_name", "collector_number",
