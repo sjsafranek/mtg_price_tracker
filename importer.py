@@ -200,7 +200,11 @@ def main() -> None:
             with tempfile.TemporaryDirectory() as tmp:
                 path = os.path.join(tmp, "bulk.jsonl")
                 filename = scryfall.download(args.type, path)
+                print(filename)
                 import_cards(conn, path, filename)
+    except Exception as err:
+        print(err)
+        sys.exit(1)
     finally:
         conn.close()
         sys.exit(0)
