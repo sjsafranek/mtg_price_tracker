@@ -26,13 +26,46 @@ import psycopg
 from psycopg.types.json import Json
 
 
-BULK_URL = "https://api.scryfall.com/bulk-data"
 
-# Scryfall requires a descriptive User-Agent and an Accept header.
-HEADERS = {
-    "User-Agent": "scryfall-pg-importer/1.0",
-    "Accept": "application/json;q=0.9,*/*;q=0.8",
-}
+class ScryFall(object):
+
+    BULK_URL = "https://api.scryfall.com/bulk-data"
+
+    # Scryfall requires a descriptive User-Agent and an Accept header.
+    HEADERS = {
+        "User-Agent": "scryfall-pg-importer/1.0",
+        "Accept": "application/json;q=0.9,*/*;q=0.8",
+    }
+
+    def __init__(self):
+        self.session = requests.Session()
+
+    def fetchBulkData():
+        resp = self.session.get(ScryFall.BULK_URL, headers=ScryFall.HEADERS, timeout=30)
+        resp.raise_for_status()
+        return resp.json()["data"]:
+
+    def download(self, bulk_type: str, dest: str) -> str:
+        url = self._get_bulk_download_url(bulk_type)
+        self._download(url, dest)
+        return url.split('/')[-1]
+
+    def _download(self, url: str, dest: str) -> None:
+        print(f"Downloading '{url}'...")
+        with self.sessions.get(url, headers=HEADERS, stream=True, timeout=60) as response:
+            response.raise_for_status()
+            with open(dest, "wb") as out_writer:
+                with gzip.GzipFile(fileobj=response.raw) as gzip_reader:
+                    shutil.copyfileobj(gzip_reader, out_writer)
+
+    def _get_bulk_download_url(self, bulk_type: str) -> str:
+        for entry in self.fetchBulkData():
+            if entry["type"] == bulk_type:
+                print(f"Bulk file: {entry['name']} "
+                      f"({entry['compressed_size'] / 1_048_576:.0f} MB, updated {entry['updated_at']})")
+                return entry["jsonl_download_uri"]
+        raise SystemExit(f"Unknown bulk type: {bulk_type}")
+
 
 COLUMNS = [
     "id", "oracle_id", "name", "set_code", "set_name", "collector_number",
@@ -51,24 +84,13 @@ DO UPDATE SET
 """
 
 
-def get_bulk_download_url(bulk_type: str) -> str:
-    resp = requests.get(BULK_URL, headers=HEADERS, timeout=30)
-    resp.raise_for_status()
-    for entry in resp.json()["data"]:
-        if entry["type"] == bulk_type:
-            print(f"Bulk file: {entry['name']} "
-                  f"({entry['compressed_size'] / 1_048_576:.0f} MB, updated {entry['updated_at']})")
-            return entry["jsonl_download_uri"]
-    raise SystemExit(f"Unknown bulk type: {bulk_type}")
-
-
-def download(url: str, dest: str) -> None:
-    print(f"Downloading '{url}'...")
-    with requests.get(url, headers=HEADERS, stream=True, timeout=60) as response:
-        response.raise_for_status()
-        with open(dest, "wb") as out_writer:
-            with gzip.GzipFile(fileobj=response.raw) as gzip_reader:
-                shutil.copyfileobj(gzip_reader, out_writer)
+# def download(url: str, dest: str) -> None:
+#     print(f"Downloading '{url}'...")
+#     with requests.get(url, headers=HEADERS, stream=True, timeout=60) as response:
+#         response.raise_for_status()
+#         with open(dest, "wb") as out_writer:
+#             with gzip.GzipFile(fileobj=response.raw) as gzip_reader:
+#                 shutil.copyfileobj(gzip_reader, out_writer)
 
 
 def card_to_row(card: dict) -> tuple:
@@ -174,11 +196,11 @@ def main() -> None:
         if args.file:
             import_cards(conn, args.file)
         else:
-            url = get_bulk_download_url(args.type)
+            scryfall = ScryFall()
             with tempfile.TemporaryDirectory() as tmp:
                 path = os.path.join(tmp, "bulk.jsonl")
-                filename = download(url, path)
-                import_cards(conn, path, url.split('/')[-1])
+                filename = scryfall.download(args.type, path)
+                import_cards(conn, path, filename)
     finally:
         conn.close()
         sys.exit(0)
