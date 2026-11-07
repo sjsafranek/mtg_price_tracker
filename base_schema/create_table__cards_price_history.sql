@@ -27,6 +27,6 @@ $$ LANGUAGE plpgsql;
 
 -- Bind trigger to table
 CREATE TRIGGER cards_price_tracker_trigger
-BEFORE INSERT OR UPDATE OR DELETE ON cards
+AFTER INSERT OR UPDATE OR DELETE ON cards
 FOR EACH ROW
 EXECUTE FUNCTION log_card_price_change();

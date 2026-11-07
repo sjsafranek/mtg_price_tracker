@@ -20,9 +20,13 @@ import os
 import sys
 import tempfile
 
-import psycopg2
+#import psycopg2
+#from psycopg2.extras import Json, execute_values
+
 import requests
-from psycopg2.extras import Json, execute_values
+
+import psycopg
+from psycopg.types.json import Json
 
 
 BULK_URL = "https://api.scryfall.com/bulk-data"
@@ -33,7 +37,7 @@ HEADERS = {
 }
 
 
-BATCH_SIZE = 1000
+BATCH_SIZE = 5000
 
 COLUMNS = [
     "id", "oracle_id", "name", "set_code", "set_name", "collector_number",
