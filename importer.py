@@ -43,7 +43,7 @@ class ScryFall(object):
     def fetchBulkData():
         resp = self.session.get(ScryFall.BULK_URL, headers=ScryFall.HEADERS, timeout=30)
         resp.raise_for_status()
-        return resp.json()["data"]:
+        return resp.json()["data"]
 
     def download(self, bulk_type: str, dest: str) -> str:
         url = self._get_bulk_download_url(bulk_type)
