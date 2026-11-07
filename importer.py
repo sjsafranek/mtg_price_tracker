@@ -61,11 +61,20 @@ ON CONFLICT (id) DO UPDATE SET
 """
 
 UPSERT_QUERY = f"""
-    INSERT INTO cards ({", ".join(COLUMNS)}) 
-    SELECT {", ".join(COLUMNS)} FROM temp_cards
-    ON CONFLICT (id) 
-    DO UPDATE SET
-        {", ".join(f"{c} = EXCLUDED.{c}" for c in COLUMNS if c != "id")}
+
+WITH 
+    current AS (
+        SELECT md5(t::text) FROM cards t;
+    ),
+    deltas AS (
+        SELECT md5(t::text), {", ".join(COLUMNS)} FROM temp_cards t;
+    )
+
+INSERT INTO cards ({", ".join(COLUMNS)}) 
+SELECT {", ".join(COLUMNS)} FROM temp_cards
+ON CONFLICT (id) 
+DO UPDATE SET
+    {", ".join(f"{c} = EXCLUDED.{c}" for c in COLUMNS if c != "id")}
 """
 
 
@@ -166,7 +175,8 @@ def import_cards(conn, path: str) -> int:
     with conn.cursor() as cur, open(path, "r") as fh:
 
         # 1. Create an empty unlogged staging table matching your target structure
-        cur.execute("""CREATE TEMP TABLE temp_cards (LIKE cards INCLUDING DEFAULTS) ON COMMIT DROP;""")
+        # cur.execute("""CREATE TEMP TABLE temp_cards (LIKE cards INCLUDING DEFAULTS) ON COMMIT DROP;""")
+        cur.execute("""CREATE UNLOGGED TABLE temp_cards (LIKE cards INCLUDING DEFAULTS);""")
 
         # 2. Stream data directly to the temp table via fast COPY protocol
         with cur.copy(f"""COPY temp_cards ({", ".join(COLUMNS)}) FROM STDIN""") as copy:
@@ -178,8 +188,8 @@ def import_cards(conn, path: str) -> int:
                 print(f"\r{total:,} cards imported", end="", flush=True)
         
         # 3. Perform the bulk upsert logic entirely in the database engine
-        print(UPSERT_QUERY)
-        cur.execute(UPSERT_QUERY)
+        # print(UPSERT_QUERY)
+        # cur.execute(UPSERT_QUERY)
 
         # 4. Commit transaction
         conn.commit()
