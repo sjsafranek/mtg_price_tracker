@@ -169,7 +169,7 @@ def import_cards(conn, path: str) -> int:
         cur.execute("""CREATE TEMP TABLE temp_cards (LIKE cards INCLUDING DEFAULTS) ON COMMIT DROP;""")
 
         # 2. Stream data directly to the temp table via fast COPY protocol
-        with cur.copy("COPY temp_cards (id, name, status) FROM STDIN") as copy:
+        with cur.copy(f""""COPY temp_cards ({", ".join(COLUMNS)}) FROM STDIN""") as copy:
             for line in fh:
                 card = json.loads(line)
                 row = card_to_row(card)
