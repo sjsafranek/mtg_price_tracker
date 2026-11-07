@@ -74,6 +74,13 @@ class ScryFall(object):
     def close(self):
         self.session.close()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+
 
 COLUMNS = [
     "id", "oracle_id", "name", "set_code", "set_name", "collector_number",
