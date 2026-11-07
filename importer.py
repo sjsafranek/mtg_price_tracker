@@ -38,9 +38,6 @@ HEADERS = {
     "Accept": "application/json;q=0.9,*/*;q=0.8",
 }
 
-
-BATCH_SIZE = 1000
-
 COLUMNS = [
     "id", "oracle_id", "name", "set_code", "set_name", "collector_number",
     "lang", "released_at", "layout", "mana_cost", "cmc", "type_line",
@@ -48,11 +45,6 @@ COLUMNS = [
     "keywords", "rarity", "artist", "prices", "legalities", "image_uris", "data",
 ]
 
-# UPSERT = f"""
-# INSERT INTO cards ({", ".join(COLUMNS)}) VALUES %s
-# ON CONFLICT (id) DO UPDATE SET
-#     {", ".join(f"{c} = EXCLUDED.{c}" for c in COLUMNS if c != "id")}
-# """
 
 UPSERT = f"""
 INSERT INTO cards ({", ".join(COLUMNS)}) VALUES ({", ".join('%s' for c in COLUMNS)})
@@ -140,32 +132,6 @@ def card_to_row(card: dict) -> tuple:
     )
 
 
-# def import_cards(conn, path: str) -> int:
-#     print("Importing...")
-#     total = 0
-#     batch = []
-#     with conn.cursor() as cur, open(path, "r") as fh:
-#         # Stream the top-level JSON array so we never load the whole file into memory.
-#         # use_float=True avoids Decimal values that json can't serialize.
-#         for line in fh:
-#             card = json.loads(line)
-#             batch.append(card_to_row(card))
-#             if len(batch) >= BATCH_SIZE:
-#                 # execute_values(cur, UPSERT, batch)
-#                 cur.executemany(UPSERT, batch)
-#                 conn.commit()
-#                 total += len(batch)
-#                 batch.clear()
-#                 print(f"\r{total:,} cards imported", end="", flush=True)
-#         if batch:
-#             # execute_values(cur, UPSERT, batch)
-#             cur.executemany(UPSERT, batch)
-#             conn.commit()
-#             total += len(batch)
-#     print(f"\r{total:,} cards imported")
-#     return total
-
-
 def import_cards(conn, path: str, filename: str) -> int:
     print("Importing...")
     total = 0
@@ -179,7 +145,6 @@ def import_cards(conn, path: str, filename: str) -> int:
             return
 
         # 1. Create an empty unlogged staging table matching your target structure
-        # cur.execute("""CREATE TEMP TABLE temp_cards (LIKE cards INCLUDING DEFAULTS) ON COMMIT DROP;""")
         cur.execute("""DROP TABLE IF EXISTS temp_cards;""");
         cur.execute("""CREATE UNLOGGED TABLE temp_cards (LIKE cards INCLUDING DEFAULTS);""")
 
@@ -232,6 +197,7 @@ def main() -> None:
     finally:
         conn.close()
         print('done')
+
 
 if __name__ == "__main__":
     main()

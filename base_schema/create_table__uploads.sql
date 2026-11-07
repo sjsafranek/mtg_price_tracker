@@ -2,6 +2,7 @@
 --DROP TABLE IF EXISTS uploads;
 
 CREATE TABLE uploads (
-	filename         VARCHAR(126) PRIMARY KEY,
-	uploaded_at      TIMESTAMP NOT NULL DEFAULT NOW()
+	id 				BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+	filename       	VARCHAR(126),
+	uploaded_at     TIMESTAMP NOT NULL DEFAULT NOW()
 );
