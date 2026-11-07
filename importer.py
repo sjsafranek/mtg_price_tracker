@@ -48,8 +48,14 @@ COLUMNS = [
     "keywords", "rarity", "artist", "prices", "legalities", "image_uris", "data",
 ]
 
+# UPSERT = f"""
+# INSERT INTO cards ({", ".join(COLUMNS)}) VALUES %s
+# ON CONFLICT (id) DO UPDATE SET
+#     {", ".join(f"{c} = EXCLUDED.{c}" for c in COLUMNS if c != "id")}
+# """
+
 UPSERT = f"""
-INSERT INTO cards ({", ".join(COLUMNS)}) VALUES %s
+INSERT INTO cards ({", ".join(COLUMNS)}) VALUES ({", ".join('%s' for c in COLUMNS)})
 ON CONFLICT (id) DO UPDATE SET
     {", ".join(f"{c} = EXCLUDED.{c}" for c in COLUMNS if c != "id")}
 """
