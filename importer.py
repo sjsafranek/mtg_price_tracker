@@ -154,7 +154,8 @@ def main() -> None:
     if not args.dsn:
         sys.exit("Set DATABASE_URL or pass --dsn")
 
-    conn = psycopg2.connect(args.dsn)
+    # conn = psycopg2.connect(args.dsn)
+    conn = psycopg.connect(args.dsn)
     try:
         if args.file:
             import_cards(conn, args.file)
