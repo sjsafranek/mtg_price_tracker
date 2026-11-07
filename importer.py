@@ -162,7 +162,7 @@ def card_to_row(card: dict) -> tuple:
 def import_cards(conn, path: str) -> int:
     print("Importing...")
     total = 0
-    batch = []
+    # Create database connection
     with conn.cursor() as cur, open(path, "r") as fh:
 
         # 1. Create an empty unlogged staging table matching your target structure
@@ -181,10 +181,9 @@ def import_cards(conn, path: str) -> int:
         print(UPSERT_QUERY)
         cur.execute(UPSERT_QUERY)
 
+        # 4. Commit transaction
         conn.commit()
 
-
-    print(f"\r{total:,} cards imported")
     return total
 
 
