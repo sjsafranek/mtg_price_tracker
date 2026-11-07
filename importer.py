@@ -47,7 +47,7 @@ INSERT INTO cards ({", ".join(COLUMNS)})
 SELECT {", ".join(COLUMNS)} FROM temp_cards
 ON CONFLICT (id) 
 DO UPDATE SET
-    {", ".join(f"{c} = EXCLUDED.{c}" for c in COLUMNS if c != "id")}
+{", ".join(f"{c} = EXCLUDED.{c}" for c in COLUMNS if c != "id")}
 """
 
 
