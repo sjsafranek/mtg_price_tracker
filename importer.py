@@ -3,7 +3,6 @@
 Import Scryfall bulk card data into PostgreSQL.
 
 Usage:
-    #pip install requests psycopg2-binary
     pip3 install requests
     pip3 install "psycopg[binary]"
     export DATABASE_URL="postgresql://mtguser:dev@localhost:5432/mtgdb"
@@ -22,16 +21,13 @@ import os
 import sys
 import tempfile
 
-#import psycopg2
-#from psycopg2.extras import Json, execute_values
-
 import requests
-
 import psycopg
 from psycopg.types.json import Json
 
 
 BULK_URL = "https://api.scryfall.com/bulk-data"
+
 # Scryfall requires a descriptive User-Agent and an Accept header.
 HEADERS = {
     "User-Agent": "scryfall-pg-importer/1.0",
@@ -46,22 +42,9 @@ COLUMNS = [
 ]
 
 
-UPSERT = f"""
-INSERT INTO cards ({", ".join(COLUMNS)}) VALUES ({", ".join('%s' for c in COLUMNS)})
-ON CONFLICT (id) DO UPDATE SET
-    {", ".join(f"{c} = EXCLUDED.{c}" for c in COLUMNS if c != "id")}
-"""
-
 UPSERT_QUERY = f"""
-WITH current AS (
-    SELECT md5(t::text) h FROM cards t
-)
 INSERT INTO cards ({", ".join(COLUMNS)}) 
 SELECT {", ".join(COLUMNS)} FROM temp_cards
-    WHERE NOT EXISTS (
-        SELECT 1 FROM current 
-        WHERE h=md5(temp_cards::text)
-    )
 ON CONFLICT (id) 
 DO UPDATE SET
     {", ".join(f"{c} = EXCLUDED.{c}" for c in COLUMNS if c != "id")}
@@ -158,14 +141,13 @@ def import_cards(conn, path: str, filename: str) -> int:
                 print(f"\r{total:,} cards imported", end="", flush=True)
         
         # 3. Perform the bulk upsert logic entirely in the database engine
-        print(UPSERT_QUERY)
         cur.execute(UPSERT_QUERY)
 
         # Update card prices
         cur.execute("""INSERT INTO card_price_history (card_id, prices) SELECT id, prices FROM temp_cards;""")
 
         # Insert filename of upload to prevent duplicates
-        cur.execute("INSERT INTO uploads (filename) VALUES(%s);", (filename,))
+        cur.execute("""INSERT INTO uploads (filename) VALUES(%s);""", (filename,))
 
         # 4. Commit transaction
         conn.commit()
@@ -186,7 +168,6 @@ def main() -> None:
     if not args.dsn:
         sys.exit("Set DATABASE_URL or pass --dsn")
 
-    # conn = psycopg2.connect(args.dsn)
     conn = psycopg.connect(args.dsn)
     try:
         if args.file:
