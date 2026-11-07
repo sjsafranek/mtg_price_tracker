@@ -171,6 +171,7 @@ def import_cards(conn, path: str) -> int:
 
         # 1. Create an empty unlogged staging table matching your target structure
         # cur.execute("""CREATE TEMP TABLE temp_cards (LIKE cards INCLUDING DEFAULTS) ON COMMIT DROP;""")
+        cur.execute("""DROP TABLE IF EXISTS temp_cards;""");
         cur.execute("""CREATE UNLOGGED TABLE temp_cards (LIKE cards INCLUDING DEFAULTS);""")
 
         # 2. Stream data directly to the temp table via fast COPY protocol
