@@ -40,7 +40,7 @@ class ScryFall(object):
     def __init__(self):
         self.session = requests.Session()
 
-    def fetchBulkData():
+    def fetchBulkData(self):
         resp = self.session.get(ScryFall.BULK_URL, headers=ScryFall.HEADERS, timeout=30)
         resp.raise_for_status()
         return resp.json()["data"]
