@@ -65,7 +65,7 @@ class ScryFall(object):
     def _get_bulk_download_url(self, bulk_type: str) -> str:
         for entry in self.fetchBulkData():
             if entry["type"] == bulk_type:
-                print(entry)
+                #print(entry)
                 print(f"Bulk file: {entry['name']} "
                       f"({entry['compressed_size'] / 1_048_576:.0f} MB, updated {entry['updated_at']})")
                 return entry["jsonl_download_uri"]
