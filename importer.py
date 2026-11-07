@@ -29,7 +29,7 @@ from psycopg.types.json import Json
 
 class ScryFall(object):
 
-    BULK_URL = "https://api.scryfall.com/bulk-data"
+    BASE_URL = "https://api.scryfall.com"
 
     # Scryfall requires a descriptive User-Agent and an Accept header.
     HEADERS = {
@@ -46,7 +46,7 @@ class ScryFall(object):
         return resp
 
     def fetchBulkData(self):
-        resp = self._get(ScryFall.BULK_URL, timeout=30)
+        resp = self._get(f'{ScryFall.BASE_URL}/bulk-data', timeout=30)
         return resp.json()["data"]
 
     def download(self, bulk_type: str, dest: str) -> str:
