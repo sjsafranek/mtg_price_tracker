@@ -181,7 +181,7 @@ def main() -> None:
                 import_cards(conn, path, url.split('/')[-1])
     finally:
         conn.close()
-        os.Exit(0)
+        exit(0)
 
 
 if __name__ == "__main__":
