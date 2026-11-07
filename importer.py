@@ -60,6 +60,14 @@ ON CONFLICT (id) DO UPDATE SET
     {", ".join(f"{c} = EXCLUDED.{c}" for c in COLUMNS if c != "id")}
 """
 
+UPSERT_QUERY = """
+    INSERT INTO cards({", ".join(COLUMNS)}) 
+    SELECT {", ".join(COLUMNS)} FROM temp_cards
+    ON CONFLICT (id) 
+    DO UPDATE SET
+        {", ".join(f"{c} = EXCLUDED.{c}" for c in COLUMNS if c != "id")}
+"""
+
 
 def get_bulk_download_url(bulk_type: str) -> str:
     resp = requests.get(BULK_URL, headers=HEADERS, timeout=30)
@@ -125,28 +133,59 @@ def card_to_row(card: dict) -> tuple:
     )
 
 
+# def import_cards(conn, path: str) -> int:
+#     print("Importing...")
+#     total = 0
+#     batch = []
+#     with conn.cursor() as cur, open(path, "r") as fh:
+#         # Stream the top-level JSON array so we never load the whole file into memory.
+#         # use_float=True avoids Decimal values that json can't serialize.
+#         for line in fh:
+#             card = json.loads(line)
+#             batch.append(card_to_row(card))
+#             if len(batch) >= BATCH_SIZE:
+#                 # execute_values(cur, UPSERT, batch)
+#                 cur.executemany(UPSERT, batch)
+#                 conn.commit()
+#                 total += len(batch)
+#                 batch.clear()
+#                 print(f"\r{total:,} cards imported", end="", flush=True)
+#         if batch:
+#             # execute_values(cur, UPSERT, batch)
+#             cur.executemany(UPSERT, batch)
+#             conn.commit()
+#             total += len(batch)
+#     print(f"\r{total:,} cards imported")
+#     return total
+
+
 def import_cards(conn, path: str) -> int:
     print("Importing...")
     total = 0
     batch = []
     with conn.cursor() as cur, open(path, "r") as fh:
-        # Stream the top-level JSON array so we never load the whole file into memory.
-        # use_float=True avoids Decimal values that json can't serialize.
-        for line in fh:
-            card = json.loads(line)
-            batch.append(card_to_row(card))
-            if len(batch) >= BATCH_SIZE:
-                # execute_values(cur, UPSERT, batch)
-                cur.executemany(UPSERT, batch)
-                conn.commit()
-                total += len(batch)
-                batch.clear()
+
+        # 1. Create an empty unlogged staging table matching your target structure
+        cur.execute("""
+            CREATE TEMP TABLE temp_cards (LIKE cards INCLUDING DEFAULTS) ON COMMIT DROP;
+        """)
+
+        # 2. Stream data directly to the temp table via fast COPY protocol
+        with cur.copy("COPY temp_users (id, name, status) FROM STDIN") as copy:
+            for line in fh:
+                card = json.loads(line)
+                row = card_to_row(card)
+                copy.write_row(row)
+                total += 1
                 print(f"\r{total:,} cards imported", end="", flush=True)
-        if batch:
-            # execute_values(cur, UPSERT, batch)
-            cur.executemany(UPSERT, batch)
-            conn.commit()
-            total += len(batch)
+        
+        # 3. Perform the bulk upsert logic entirely in the database engine
+        print(UPSERT_QUERY)
+        cur.execute(UPSERT_QUERY)
+
+        conn.commit()
+
+
     print(f"\r{total:,} cards imported")
     return total
 
