@@ -1,9 +1,10 @@
 
+--DROP TABLE IF EXISTS card_price_history;
+
 CREATE TABLE IF NOT EXISTS card_price_history (
-    card_id      	UUID,
-    prices          JSONB,
-    action_type     VARCHAR(10) NOT NULL,
-    changed_at      TIMESTAMP NOT NULL DEFAULT NOW()
+    card_id             UUID REFERENCES cards(id),
+    prices              JSONB,
+    event_timestamp     TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- -- Create trigger function

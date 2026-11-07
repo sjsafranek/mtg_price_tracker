@@ -161,6 +161,9 @@ def import_cards(conn, path: str, filename: str) -> int:
         print(UPSERT_QUERY)
         cur.execute(UPSERT_QUERY)
 
+        # Update card prices
+        cur.execute("""INSERT INTO card_price_history (card_id, prices) SELECT id, prices FROM temp_cards;""")
+
         # Insert filename of upload to prevent duplicates
         cur.execute("INSERT INTO uploads (filename) VALUES(%s);", (filename,))
 
