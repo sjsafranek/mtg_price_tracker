@@ -160,15 +160,37 @@ def import_cards(conn, path: str, filename: str) -> int:
         cur.execute("""DROP TABLE IF EXISTS temp_cards;""");
         cur.execute("""CREATE UNLOGGED TABLE temp_cards (LIKE cards INCLUDING DEFAULTS);""")
 
-        # 2. Stream data directly to the temp table via fast COPY protocol
-        with cur.copy(f"""COPY temp_cards ({", ".join(COLUMNS)}) FROM STDIN""") as copy:
-            for line in fh:
-                card = json.loads(line)
-                row = card_to_row(card)
-                copy.write_row(row)
-                total += 1
-                print(f"\r{total:,} cards imported", end="", flush=True)
+        # # 2. Stream data directly to the temp table via fast COPY protocol
+        # with cur.copy(f"""COPY temp_cards ({", ".join(COLUMNS)}) FROM STDIN""") as copy:
+        #     for line in fh:
+        #         card = json.loads(line)
+        #         row = card_to_row(card)
+        #         copy.write_row(row)
+        #         total += 1
+        #         print(f"\r{total:,} cards imported", end="", flush=True)
         
+        # 2. Stream data directly to the temp table via fast COPY protocol
+        batch_size = 5000
+        batch = []
+        for line in fh:
+            card = json.loads(line)
+            row = card_to_row(card)
+            batch.append(row)
+            if len(batch) == batch_size:
+                with cur.copy(f"""COPY temp_cards ({", ".join(COLUMNS)}) FROM STDIN""") as copy:
+                    for row in batch:
+                        copy.write_row(row)
+                        total += 1
+                        print(f"\r{total:,} cards imported", end="", flush=True)
+                    batch = []
+        
+        with cur.copy(f"""COPY temp_cards ({", ".join(COLUMNS)}) FROM STDIN""") as copy:
+        for row in batch:
+            copy.write_row(row)
+            total += 1
+            print(f"\r{total:,} cards imported", end="", flush=True)
+            batch = []
+
         # 3. Perform the bulk upsert logic entirely in the database engine
         cur.execute(UPSERT_QUERY)
 
