@@ -170,7 +170,7 @@ def import_cards(conn, path: str, filename: str) -> int:
         #         print(f"\r{total:,} cards imported", end="", flush=True)
         
         # 2. Stream data directly to the temp table via fast COPY protocol
-        batch_size = 5000
+        batch_size = 1000
         batch = []
         for line in fh:
             card = json.loads(line)
