@@ -185,11 +185,11 @@ def import_cards(conn, path: str, filename: str) -> int:
                     batch = []
         
         with cur.copy(f"""COPY temp_cards ({", ".join(COLUMNS)}) FROM STDIN""") as copy:
-        for row in batch:
-            copy.write_row(row)
-            total += 1
-            print(f"\r{total:,} cards imported", end="", flush=True)
-            batch = []
+            for row in batch:
+                copy.write_row(row)
+                total += 1
+                print(f"\r{total:,} cards imported", end="", flush=True)
+                batch = []
 
         # 3. Perform the bulk upsert logic entirely in the database engine
         cur.execute(UPSERT_QUERY)
